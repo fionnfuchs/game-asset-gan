@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"> </script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- Place your code in the script tag below. You can also use an external .js file -->
+
+  </head>
+
+  <body>
+    <p>Move the sliders around to generate something. It might take a while at first.</p>
+    <div class="slidecontainer">
+      <input type="range" min="1" max="100" value="50" class="slider" id="slider1">
+    </div>
+    <div class="slidecontainer">
+      <input type="range" min="1" max="100" value="50" class="slider" id="slider2">
+    </div>
+    <div class="slidecontainer">
+      <input type="range" min="1" max="100" value="50" class="slider" id="slider3">
+    </div>
+    <div class="slidecontainer">
+      <input type="range" min="1" max="100" value="50" class="slider" id="slider4">
+    </div>
+  </body>
+  <script>
+    var canvas=document.createElement("canvas");
+    var ctx=canvas.getContext("2d");
+    var cv = document.createElement('canvas');
+    var context = cv.getContext('2d');
+
+    canvas.width=256;
+    canvas.height=256;
+
+    var image = new Image();
+    var img = document.body.appendChild(image);
+    var imgData;
+    img.style = "width:128px;height:128px;image-rendering: pixelated;"
+
+    var p1 = 0;
+    var p2 = 0;
+    var p3 = 0;
+    var p4 = 0;
+    var p5 = 0;
+
+    var s1 = document.getElementById("slider1");
+    var s2 = document.getElementById("slider2");
+    var s3 = document.getElementById("slider3");
+    var s4 = document.getElementById("slider4");
+    var s5 = document.getElementById("slider5");
+
+    s1.oninput = function() {
+      p1 = -5 + this.value / 10;
+      nextPrediction();
+    }
+    s2.oninput = function() {
+      p2 = -5 + this.value / 10;
+      nextPrediction();
+    }
+    s3.oninput = function() {
+      p3 = -5 + this.value / 10;
+      nextPrediction();
+    }
+    s4.oninput = function() {
+      p4 = -5 + this.value / 10;
+      nextPrediction();
+    }
+    s5.oninput = function() {
+      p5 = -5 + this.value / 10;
+      nextPrediction();
+    }
+
+    function imagedata_to_image(imagedata) {
+        cv.width = imagedata.width;
+        cv.height = imagedata.height;
+        context.putImageData(imagedata, 0, 0);
+
+        return cv.toDataURL();
+    }
+
+    function nextPrediction() {
+      (async () => {
+        if(!model) {
+          var model = await tf.loadLayersModel('models/items_2/model.json');
+        }
+
+        //var input = tf.tensor2d([[1], [2], [3], [4], [4]], [5,1]);
+        var input = tf.tensor2d([[p1,p2,p3,p4]]);
+        console.log(await input.array());
+        var prediction = await model.predict(input).array();
+        console.log(prediction);
+
+        imgData=ctx.getImageData(0,0,16,16);
+        _d = [];
+
+        index = 0;
+        for(y = 0; y < 16; y++) {
+          for(x = 0; x < 16; x++) {
+            _d.push(prediction[0][y][x][0] * 255);
+            _d.push(prediction[0][y][x][1] * 255);
+            _d.push(prediction[0][y][x][2] * 255);
+            _d.push(255);
+          }
+        }
+
+        data = imgData.data;
+        for(i = 0; i < _d.length; i++) {
+          data[i] = _d[i];
+        }
+
+        image.src=imagedata_to_image(imgData);
+      })();
+    }
+  </script>
+</html>
